@@ -65,7 +65,7 @@ pub fn parse_commands(mut command_args: &str) -> Vec<Command> {
             None => CommandLocation::Global,
         };
 
-        let mut command_type = "";
+        let command_type: &str;
         (command_type, command_args) = command_args.split_at(1);
         
 
