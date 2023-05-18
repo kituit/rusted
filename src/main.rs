@@ -1,16 +1,16 @@
-use std::{io::stdin, error::Error};
+pub mod commands;
+
+use std::{io::stdin, fmt::Debug};
 
 use clap::Parser;
-use regex::Regex;
+use commands::Command;
+use commands::parse_commands;
+use commands::TransformerException;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-    /// Name of the person to greet
-    from: String,
-
-    /// Number of times to greet
-    replace: String,
+    commands: String
 }
 
 struct StdinReader {
@@ -43,77 +43,24 @@ impl Iterator for StdinReader {
     }
 }
 
-#[derive(Debug)]
-enum TransformerException {
-    Quit
-}
-
-trait Transformer {
-    fn get_location(&self) -> &CommandLocation;
-
-    fn to_be_applied(&self, line_number: u64, line: &str) -> bool {
-        self.get_location().matches(line_number, line)
-    }
-
-    fn apply(&self, line: &mut String) -> Result<(), TransformerException>;
-}
-
-struct Quit {
-    location: CommandLocation,
-}
-
-impl Quit {
-    fn new(location: CommandLocation) -> Self {
-        Self { location }
-    }
-}
-
-impl Transformer for Quit {
-    fn get_location(&self) -> &CommandLocation {
-        &self.location
-    }
-
-    fn apply(&self, line: &mut String) -> Result<(), TransformerException> {
-        None
-    }
-}
-
-enum CommandLocation {
-    Global,
-    Regex(Regex),
-    LineNumber(u64),
-    // Range(bool, Box<CommandLocation>, Box<CommandLocation>)
-}
-
-impl CommandLocation {
-    fn matches(&self, line_number: u64, line: &str) -> bool {
-        match self {
-            CommandLocation::Global => true,
-            CommandLocation::Regex(regex) => regex.is_match(line),
-            CommandLocation::LineNumber(num) => line_number == *num,
-        }
-    }
-}
-
 fn main() {
     let args = Args::parse();
-    println!("{:?}", args);
-
-    let commands: Vec<Box<dyn Transformer>> = vec![
-        Box::new(Quit::new(CommandLocation::LineNumber(2)))
-    ];
+    let commands = parse_commands(&args.commands);
 
     let reader = StdinReader::new();
-    'outer: for (line_number, mut line) in reader {
-        println!("{line_number} {line:?}");
-        for command in commands.iter() {
-            if !command.to_be_applied(line_number, &line){ continue; }
-            if let Err(TransformerException::Quit) = command.apply(&mut line) {
-                break 'outer;
-            }
+    for (line_number, mut line) in reader {
+        if apply_commands(line_number, &mut line, &commands).is_ok() {
+            print!("{line}");
+        } else {
+            break;
         }
-        println!("{line_number} {line:?}");
     }
 }
 
-// fn apply_commands
+fn apply_commands(line_number: u64, line: &mut String, commands: &[Command]) -> Result<(), TransformerException> {
+    for command in commands {
+        if !command.to_be_applied(line_number, &line){ continue; }
+        command.apply(line)?;
+    };
+    Ok(())
+}
