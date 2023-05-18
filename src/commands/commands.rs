@@ -44,7 +44,7 @@ impl Command {
 
 pub fn parse_commands(mut command_args: &str) -> Vec<Command> {
     let location_regex = Regex::new(r"^(\d+|/[^/]*/)").unwrap();
-    let s_regex = Regex::new(r"^/(?<Find>[^/]*)/(?<Replace>[^/]*)/(?<Global>g?)").unwrap();
+    let s_regex = Regex::new(r"^/([^/]*)/([^/]*)/(g?)").unwrap();
     
     let mut results = vec![];
     while command_args.len() > 0 {
