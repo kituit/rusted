@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use std::{fmt::Debug, io::Write};
 
 use regex::Regex;
 
@@ -37,8 +37,8 @@ impl Command {
         self.location.matches(line_number, line)
     }
 
-    pub fn apply(&self, line: &mut String) -> Result<(), TransformerException> {
-        self.transformer.apply(line)
+    pub fn apply(&self, line: &mut String, writer: &mut dyn Write) -> Result<(), TransformerException> {
+        self.transformer.apply(line, writer)
     }
 }
 
