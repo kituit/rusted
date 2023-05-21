@@ -47,9 +47,9 @@ fn main() {
 
 }
 
-fn run<I: Iterator<Item = (usize, String)>, W: Write>(reader: I, settings: Settings, writer: &mut W) {
+fn run<I: Iterator<Item = (usize, String)>, W: Write>(reader: I, mut settings: Settings, writer: &mut W) {
     for (line_number, mut line) in reader {
-        if apply_commands(line_number, &mut line, &settings.commands, writer).is_err() {
+        if apply_commands(line_number, &mut line, &mut settings.commands, writer).is_err() {
             break;
         } else if !settings.quiet {
             let _ = write!(writer, "{line}");
@@ -57,7 +57,7 @@ fn run<I: Iterator<Item = (usize, String)>, W: Write>(reader: I, settings: Setti
     }
 }
 
-fn apply_commands<W: Write>(line_number: usize, line: &mut String, commands: &[Command], writer: &mut W) -> Result<(), TransformerException> {
+fn apply_commands<W: Write>(line_number: usize, line: &mut String, commands: &mut[Command], writer: &mut W) -> Result<(), TransformerException> {
     for command in commands {
         if !command.to_be_applied(line_number, &line){ continue; }
         command.apply(line, writer)?;
