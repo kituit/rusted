@@ -8,12 +8,12 @@ use super::transformers::{Transformer, TransformerException, Quit, Print, Delete
 enum CommandLocation {
     Global,
     Regex(Regex),
-    LineNumber(u64),
+    LineNumber(usize),
     // Range(bool, Box<CommandLocation>, Box<CommandLocation>)
 }
 
 impl CommandLocation {
-    fn matches(&self, line_number: u64, line: &str) -> bool {
+    fn matches(&self, line_number: usize, line: &str) -> bool {
         match self {
             CommandLocation::Global => true,
             CommandLocation::Regex(regex) => regex.is_match(line),
@@ -33,7 +33,7 @@ impl Command {
         Self { location, transformer }
     }
     
-    pub fn to_be_applied(&self, line_number: u64, line: &str) -> bool {
+    pub fn to_be_applied(&self, line_number: usize, line: &str) -> bool {
         self.location.matches(line_number, line)
     }
 

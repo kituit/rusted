@@ -15,7 +15,7 @@ pub trait Transformer: Debug {
 pub struct Delete;
 
 impl Transformer for Delete {
-    fn apply(&self, line: &mut String, writer: &mut dyn Write) -> Result<(), TransformerException> {
+    fn apply(&self, line: &mut String, _writer: &mut dyn Write) -> Result<(), TransformerException> {
         *line = "".to_string();
         Ok(())
     }
@@ -36,7 +36,7 @@ impl Substitute {
 }
 
 impl Transformer for Substitute {
-    fn apply(&self, line: &mut String, writer: &mut dyn Write) -> Result<(), TransformerException> {
+    fn apply(&self, line: &mut String, _writer: &mut dyn Write) -> Result<(), TransformerException> {
         if self.global {
             *line = self.find.replace_all(line, &self.replace).to_string();
         } else {
@@ -51,7 +51,7 @@ impl Transformer for Substitute {
 pub struct Quit;
 
 impl Transformer for Quit {
-    fn apply(&self, _line: &mut String, writer: &mut dyn Write) -> Result<(), TransformerException> {
+    fn apply(&self, _line: &mut String, _writer: &mut dyn Write) -> Result<(), TransformerException> {
         Err(TransformerException::Quit)
     }
 }

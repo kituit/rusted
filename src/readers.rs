@@ -1,7 +1,7 @@
-use std::{io::{stdin, BufReader, BufRead, Lines}, fs::File, path::Path};
+use std::{io::{stdin, BufReader, BufRead, Lines}, fs::File, path::Path, iter::Enumerate};
 
 pub struct StdinReader {
-    curr_line: u64,
+    curr_line: usize,
 }
 
 impl StdinReader {
@@ -11,7 +11,7 @@ impl StdinReader {
 }
 
 impl Iterator for StdinReader {
-    type Item = (u64, String);
+    type Item = (usize, String);
 
     fn next(&mut self) -> Option<Self::Item> {
         let mut buffer = String::new();
@@ -30,57 +30,58 @@ impl Iterator for StdinReader {
     }
 }
 
-// struct FileReader {
-//     curr_line: u64,
-//     files: Vec<String>,
-//     curr_file: Option<Lines<BufReader<File>>>
-// }
+pub struct FileReader {
+    files: Vec<String>,
+    curr_file: Option<Enumerate<Lines<BufReader<File>>>>
+}
 
-// impl FileReader {
-//     fn new(files: Vec<String>) -> Self {
-//         let files = files.into_iter()
-//             .map(|file_name| (file_name, Path::new(&file_name)))
-//             .filter(|(file_name, file_path)| {
-//                 let exists = file_path.exists();
-//                 if !exists { eprintln!("ERROR: File {file_name} does not exist") }
-//                 exists
-//             })
-//             .map(|(file_name, _)| file_name)
-//             .collect::<Vec<String>>();
+impl FileReader {
+    pub fn new(mut files: Vec<String>) -> Self {
+        for file_name in files.iter() {
+            let file_path = Path::new(file_name);
+            if !file_path.is_file() {
+                panic!("ERROR: No such file {file_name}");
+            }
+        }
 
-//         let curr_file = files.get(0).and_then(|file_name| Some(File::open(file_name).unwrap()));
+        files.reverse();
 
-//         Self {
-//             curr_line: 0,
-//             files,
-//             curr_file
-//         }
-//     }
-// }
+        Self {
+            files,
+            curr_file: None
+        }
+    }
 
-// impl Iterator for FileReader {
-//     type Item = (u64, String);
+    fn open_next_file(&mut self) {
+        if let Some(file_name) = self.files.pop() {
+            self.curr_file = Some(BufReader::new(File::open(file_name).unwrap()).lines().enumerate());
+        }
+    }
 
-//     fn next(&mut self) -> Option<Self::Item> {
-//         // match &self.curr_file {
-//         //     Some(file) => {
-                
-//         //     },
-//         //     None => None
-//         // }
+}
 
-//         if let Some(file) = &self.curr_file {
-//             let next_line = file.next().and_then(|line| Some(line.expect("File error")));
+impl Iterator for FileReader {
+    type Item = (usize, String);
 
-//             if next_line.is_some() {
-//                 return next_line;
-//             }
+    fn next(&mut self) -> Option<Self::Item> {
+       
+        if self.curr_file.is_none() {
+            self.open_next_file();
+            if self.curr_file.is_none() { return None }
+        }
+
+        let curr_file = &mut self.curr_file.as_mut().unwrap();
+
+        if let Some((line_number, line)) = curr_file.next() {
+            let line_number = line_number + 1;
+            let mut line = line.expect("Error reading from file");
+            line.push('\n');
+            Some((line_number, line))
+        } else {
+            self.curr_file = None;
+            self.next()
+        }
+    }
 
 
-//         }
-
-
-
-//         todo!()
-//     }
-// }
+}
