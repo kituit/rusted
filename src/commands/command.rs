@@ -161,3 +161,57 @@ pub fn parse_commands(mut command_args: &str) -> Vec<Command> {
 
     results
 }
+
+
+#[cfg(test)]
+mod location_tests {
+    use super::*;
+
+    #[test]
+    fn test_global() {
+        let mut location = CommandLocation::Global;
+        let line = Line {
+            line_number: 100,
+            text: "Hello World".to_string(),
+            is_last_line: false
+        };
+
+        assert!(location.matches(&line));
+    }
+
+    #[test]
+    fn test_line_number() {
+        let mut location = CommandLocation::LineNumber(10);
+        let mut line = Line {
+            line_number: 0,
+            text: "Hello World".to_string(),
+            is_last_line: false
+        };
+
+
+        for i in 8..=12 {
+            line.line_number = i;
+            assert_eq!(location.matches(&line), i == 10)
+        }
+    }
+
+    #[test]
+    fn test_last_line() {
+        let mut location = CommandLocation::LastLine;
+        let mut line = Line {
+            line_number: 0,
+            text: "Hello World".to_string(),
+            is_last_line: false
+        };
+
+        assert!(!location.matches(&line));
+        line.is_last_line = true;
+        assert!(location.matches(&line));
+    }
+
+    #[test]
+    fn test_regex() {
+        todo!()
+    }
+
+}

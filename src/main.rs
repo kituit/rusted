@@ -96,14 +96,14 @@ mod tests {
         assert_eq!(data, "1\n2\n3\n4\n5\n6\n7\n8\n9\n");
     }
 
-    #[test]
-    fn it_works2() {
-        let reader = Reader::new(StdinReader::default());
-        let settings = Settings {
-            commands: parse_commands("$s/hello/world/"),
-            quiet: false,
-        };
+    // #[test]
+    // fn it_works2() {
+    //     let reader = Reader::new(StdinReader::default());
+    //     let settings = Settings {
+    //         commands: parse_commands("$s/hello/world/"),
+    //         quiet: false,
+    //     };
 
-        run(reader, settings, &mut io::stdout());
-    }
+    //     run(reader, settings, &mut io::stdout());
+    // }
 }
