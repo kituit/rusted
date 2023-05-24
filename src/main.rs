@@ -76,14 +76,15 @@ fn apply_commands<W: Write>(
 
 #[cfg(test)]
 mod tests {
+    use crate::readers::GeneralReader;
+
     use super::*;
 
     #[test]
     fn it_works() {
-        let iter = (1..100)
-            .into_iter()
-            .map(|num| (num as usize, format!("{num}\n")));
-        let reader = Reader::new(iter);
+        let iter = (1..100).into_iter();
+
+        let reader = Reader::new(GeneralReader::new(iter));
         let settings = Settings {
             commands: parse_commands("/.{2}/d"),
             quiet: false,
