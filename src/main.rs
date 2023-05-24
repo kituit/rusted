@@ -8,7 +8,8 @@ use clap::Parser;
 use commands::Command;
 use commands::parse_commands;
 use commands::TransformerException;
-use readers::{StdinReader, FileReader};
+use readers::{Reader, FileReader, StdinReader, Line};
+
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -38,29 +39,29 @@ fn main() {
     let writer = &mut io::stdout();
 
     if args.files.len() > 0 {
-        let reader = FileReader::new(args.files);
+        let reader = Reader::new(FileReader::new(args.files));
         run(reader, settings, writer);
     } else {
-        let reader = StdinReader::new();
+        let reader = Reader::new(StdinReader::new());
         run(reader, settings, writer)
     };
 
 }
 
-fn run<I: Iterator<Item = (usize, String)>, W: Write>(reader: I, mut settings: Settings, writer: &mut W) {
-    for (line_number, mut line) in reader {
-        if apply_commands(line_number, &mut line, &mut settings.commands, writer).is_err() {
+fn run<I: Iterator<Item = (usize, String)>, W: Write>(reader: Reader<I>, mut settings: Settings, writer: &mut W) {
+    for mut line in reader {
+        if apply_commands(&mut line, &mut settings.commands, writer).is_err() {
             break;
         } else if !settings.quiet {
-            let _ = write!(writer, "{line}");
+            let _ = write!(writer, "{}", line.text);
         }
     }
 }
 
-fn apply_commands<W: Write>(line_number: usize, line: &mut String, commands: &mut[Command], writer: &mut W) -> Result<(), TransformerException> {
+fn apply_commands<W: Write>(line: &mut Line, commands: &mut[Command], writer: &mut W) -> Result<(), TransformerException> {
     for command in commands {
-        if !command.to_be_applied(line_number, &line){ continue; }
-        command.apply(line, writer)?;
+        if !command.to_be_applied(line){ continue; }
+        command.apply(&mut line.text, writer)?;
     }
     Ok(())
 }
@@ -71,15 +72,27 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let mut reader = (1..100).into_iter().map(|num| (num as usize, format!("{num}\n")));
+        let iter = (1..100).into_iter().map(|num| (num as usize, format!("{num}\n")));
+        let reader = Reader::new(iter);
         let settings = Settings {
             commands: parse_commands("/.{2}/d"),
             quiet: false
         };
 
         let mut results: Vec<u8> = vec![];
-        run(&mut reader, settings, &mut results);
+        run(reader, settings, &mut results);
         let data = String::from_utf8(results).unwrap();
         assert_eq!(data, "1\n2\n3\n4\n5\n6\n7\n8\n9\n");
+    }
+
+    #[test]
+    fn it_works2() {
+        let reader = Reader::new(StdinReader::new());
+        let settings = Settings {
+            commands: parse_commands("$s/hello/world/"),
+            quiet: false
+        };
+
+        run(reader, settings, &mut io::stdout());
     }
 }

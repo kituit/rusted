@@ -8,15 +8,15 @@ pub enum TransformerException {
 }
 
 pub trait Transformer: Debug {
-    fn apply(&self, line: &mut String, writer: &mut dyn Write) -> Result<(), TransformerException>;
+    fn apply(&self, text: &mut String, writer: &mut dyn Write) -> Result<(), TransformerException>;
 }
 
 #[derive(Debug)]
 pub struct Delete;
 
 impl Transformer for Delete {
-    fn apply(&self, line: &mut String, _writer: &mut dyn Write) -> Result<(), TransformerException> {
-        *line = "".to_string();
+    fn apply(&self, text: &mut String, _writer: &mut dyn Write) -> Result<(), TransformerException> {
+        *text = "".to_string();
         Ok(())
     }
 }
@@ -36,11 +36,11 @@ impl Substitute {
 }
 
 impl Transformer for Substitute {
-    fn apply(&self, line: &mut String, _writer: &mut dyn Write) -> Result<(), TransformerException> {
+    fn apply(&self, text: &mut String, _writer: &mut dyn Write) -> Result<(), TransformerException> {
         if self.global {
-            *line = self.find.replace_all(line, &self.replace).to_string();
+            *text = self.find.replace_all(text, &self.replace).to_string();
         } else {
-            *line = self.find.replace(line, &self.replace).to_string();
+            *text = self.find.replace(text, &self.replace).to_string();
         }
         Ok(())
     }
@@ -51,7 +51,7 @@ impl Transformer for Substitute {
 pub struct Quit;
 
 impl Transformer for Quit {
-    fn apply(&self, _line: &mut String, _writer: &mut dyn Write) -> Result<(), TransformerException> {
+    fn apply(&self, _text: &mut String, _writer: &mut dyn Write) -> Result<(), TransformerException> {
         Err(TransformerException::Quit)
     }
 }
@@ -61,8 +61,8 @@ impl Transformer for Quit {
 pub struct Print;
 
 impl Transformer for Print {
-    fn apply(&self, line: &mut String, writer: &mut dyn Write) -> Result<(), TransformerException> {
-        let _ = write!(writer, "{line}");
+    fn apply(&self, text: &mut String, writer: &mut dyn Write) -> Result<(), TransformerException> {
+        let _ = write!(writer, "{text}");
         Ok(())
     }
 }
