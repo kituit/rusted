@@ -1,8 +1,13 @@
-use std::{iter::Enumerate, io::{BufReader, BufRead, Lines}, fs::File, path::Path};
+use std::{
+    fs::File,
+    io::{BufRead, BufReader, Lines},
+    iter::Enumerate,
+    path::Path,
+};
 
 pub struct FileReader {
     files: Vec<String>,
-    curr_file: Option<Enumerate<Lines<BufReader<File>>>>
+    curr_file: Option<Enumerate<Lines<BufReader<File>>>>,
 }
 
 impl FileReader {
@@ -18,26 +23,28 @@ impl FileReader {
 
         Self {
             files,
-            curr_file: None
+            curr_file: None,
         }
     }
 
     fn open_next_file(&mut self) {
         if let Some(file_name) = self.files.pop() {
-            self.curr_file = Some(BufReader::new(File::open(file_name).unwrap()).lines().enumerate());
+            self.curr_file = Some(
+                BufReader::new(File::open(file_name).unwrap())
+                    .lines()
+                    .enumerate(),
+            );
         }
     }
-
 }
 
 impl Iterator for FileReader {
     type Item = (usize, String);
 
     fn next(&mut self) -> Option<Self::Item> {
-       
         if self.curr_file.is_none() {
             self.open_next_file();
-            if self.curr_file.is_none() { return None }
+            let _ = self.curr_file.as_ref()?;
         }
 
         let curr_file = &mut self.curr_file.as_mut().unwrap();
@@ -52,6 +59,4 @@ impl Iterator for FileReader {
             self.next()
         }
     }
-
-
 }

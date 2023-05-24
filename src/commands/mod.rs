@@ -1,6 +1,6 @@
-mod commands;
+mod command;
 mod transformers;
 
-pub use commands::Command;
-pub use commands::parse_commands;
+pub use command::parse_commands;
+pub use command::Command;
 pub use transformers::TransformerException;

@@ -6,7 +6,7 @@ pub struct Line {
 
 enum Buffer {
     FirstLine,
-    Continue(Option<(usize, String)>)
+    Continue(Option<(usize, String)>),
 }
 
 impl Buffer {
@@ -27,39 +27,37 @@ impl Buffer {
 
 pub struct Reader<E> {
     iter: E,
-    buffer: Buffer
+    buffer: Buffer,
 }
 
-impl <E> Reader<E> {
+impl<E> Reader<E> {
     pub fn new(iter: E) -> Self {
-        Self { iter, buffer: Buffer::FirstLine }
+        Self {
+            iter,
+            buffer: Buffer::FirstLine,
+        }
     }
 }
 
-impl <E: Iterator<Item = (usize, String)>> Iterator for Reader<E> {
+impl<E: Iterator<Item = (usize, String)>> Iterator for Reader<E> {
     type Item = Line;
 
     fn next(&mut self) -> Option<Self::Item> {
-        
         if let Buffer::FirstLine = self.buffer {
             self.buffer = Buffer::Continue(self.iter.next());
         }
 
-        if self.buffer.get_inner().is_none() {
-            return None;
-        };
+        let _ = self.buffer.get_inner()?;
 
         let next_line = self.iter.next();
         let is_last_line = next_line.is_none();
         let curr_line = std::mem::replace(&mut self.buffer, Buffer::Continue(next_line));
         let (line_number, text) = curr_line.into_inner()?;
 
-        Some(
-            Line {
-                line_number,
-                text,
-                is_last_line
-            }
-        )
+        Some(Line {
+            line_number,
+            text,
+            is_last_line,
+        })
     }
 }

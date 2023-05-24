@@ -1,13 +1,8 @@
 use std::io::stdin;
 
+#[derive(Default)]
 pub struct StdinReader {
     curr_line: usize,
-}
-
-impl StdinReader {
-    pub fn new() -> Self {
-        Self { curr_line: 0 }
-    }
 }
 
 impl Iterator for StdinReader {

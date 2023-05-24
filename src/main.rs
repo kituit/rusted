@@ -1,15 +1,14 @@
 pub mod commands;
 pub mod readers;
 
-use std::io::{Write, self};
 use std::fmt::Debug;
+use std::io::{self, Write};
 
 use clap::Parser;
-use commands::Command;
 use commands::parse_commands;
+use commands::Command;
 use commands::TransformerException;
-use readers::{Reader, FileReader, StdinReader, Line};
-
+use readers::{FileReader, Line, Reader, StdinReader};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -24,7 +23,7 @@ struct Args {
 
 struct Settings {
     commands: Vec<Command>,
-    quiet: bool
+    quiet: bool,
 }
 
 fn main() {
@@ -33,22 +32,25 @@ fn main() {
 
     let settings = Settings {
         commands,
-        quiet: args.quiet
+        quiet: args.quiet,
     };
 
     let writer = &mut io::stdout();
 
-    if args.files.len() > 0 {
+    if args.files.is_empty() {
+        let reader = Reader::new(StdinReader::default());
+        run(reader, settings, writer)
+    } else {
         let reader = Reader::new(FileReader::new(args.files));
         run(reader, settings, writer);
-    } else {
-        let reader = Reader::new(StdinReader::new());
-        run(reader, settings, writer)
     };
-
 }
 
-fn run<I: Iterator<Item = (usize, String)>, W: Write>(reader: Reader<I>, mut settings: Settings, writer: &mut W) {
+fn run<I, W>(reader: Reader<I>, mut settings: Settings, writer: &mut W)
+where
+    I: Iterator<Item = (usize, String)>,
+    W: Write,
+{
     for mut line in reader {
         if apply_commands(&mut line, &mut settings.commands, writer).is_err() {
             break;
@@ -58,9 +60,15 @@ fn run<I: Iterator<Item = (usize, String)>, W: Write>(reader: Reader<I>, mut set
     }
 }
 
-fn apply_commands<W: Write>(line: &mut Line, commands: &mut[Command], writer: &mut W) -> Result<(), TransformerException> {
+fn apply_commands<W: Write>(
+    line: &mut Line,
+    commands: &mut [Command],
+    writer: &mut W,
+) -> Result<(), TransformerException> {
     for command in commands {
-        if !command.to_be_applied(line){ continue; }
+        if !command.to_be_applied(line) {
+            continue;
+        }
         command.apply(&mut line.text, writer)?;
     }
     Ok(())
@@ -72,11 +80,13 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let iter = (1..100).into_iter().map(|num| (num as usize, format!("{num}\n")));
+        let iter = (1..100)
+            .into_iter()
+            .map(|num| (num as usize, format!("{num}\n")));
         let reader = Reader::new(iter);
         let settings = Settings {
             commands: parse_commands("/.{2}/d"),
-            quiet: false
+            quiet: false,
         };
 
         let mut results: Vec<u8> = vec![];
@@ -87,10 +97,10 @@ mod tests {
 
     #[test]
     fn it_works2() {
-        let reader = Reader::new(StdinReader::new());
+        let reader = Reader::new(StdinReader::default());
         let settings = Settings {
             commands: parse_commands("$s/hello/world/"),
-            quiet: false
+            quiet: false,
         };
 
         run(reader, settings, &mut io::stdout());
