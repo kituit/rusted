@@ -5,12 +5,12 @@ use std::{
     path::Path,
 };
 
-pub struct FileReader {
+pub struct FileIter {
     files: Vec<String>,
     curr_file: Option<Enumerate<Lines<BufReader<File>>>>,
 }
 
-impl FileReader {
+impl FileIter {
     pub fn new(mut files: Vec<String>) -> Self {
         for file_name in files.iter() {
             let file_path = Path::new(file_name);
@@ -38,7 +38,7 @@ impl FileReader {
     }
 }
 
-impl Iterator for FileReader {
+impl Iterator for FileIter {
     type Item = (usize, String);
 
     fn next(&mut self) -> Option<Self::Item> {

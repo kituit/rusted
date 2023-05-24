@@ -8,7 +8,7 @@ use clap::Parser;
 use commands::parse_commands;
 use commands::Command;
 use commands::TransformerException;
-use readers::{FileReader, Line, Reader, StdinReader};
+use readers::{FileIter, Line, Reader, StdinReader};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -41,7 +41,7 @@ fn main() {
         let reader = Reader::new(StdinReader::default());
         run(reader, settings, writer)
     } else {
-        let reader = Reader::new(FileReader::new(args.files));
+        let reader = Reader::new(FileIter::new(args.files));
         run(reader, settings, writer);
     };
 }
@@ -76,7 +76,7 @@ fn apply_commands<W: Write>(
 
 #[cfg(test)]
 mod tests {
-    use crate::readers::GeneralReader;
+    use crate::readers::GeneralIter;
 
     use super::*;
 
@@ -84,7 +84,7 @@ mod tests {
     fn it_works() {
         let iter = (1..100).into_iter();
 
-        let reader = Reader::new(GeneralReader::new(iter));
+        let reader = Reader::new(GeneralIter::new(iter));
         let settings = Settings {
             commands: parse_commands("/.{2}/d"),
             quiet: false,

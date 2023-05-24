@@ -1,15 +1,15 @@
-pub struct GeneralReader<I> {
+pub struct GeneralIter<I> {
     iter: I,
     curr_line: usize,
 }
 
-impl<I> GeneralReader<I> {
+impl<I> GeneralIter<I> {
     pub fn new(iter: I) -> Self {
         Self { iter, curr_line: 0 }
     }
 }
 
-impl<E: ToString, I: Iterator<Item = E>> Iterator for GeneralReader<I> {
+impl<E: ToString, I: Iterator<Item = E>> Iterator for GeneralIter<I> {
     type Item = (usize, String);
 
     fn next(&mut self) -> Option<Self::Item> {
