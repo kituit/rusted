@@ -81,7 +81,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn it_works() {
+    fn test_basic() {
         let iter = (1..100).into_iter();
 
         let reader = Reader::new(GeneralIter::new(iter));
@@ -95,15 +95,4 @@ mod tests {
         let data = String::from_utf8(results).unwrap();
         assert_eq!(data, "1\n2\n3\n4\n5\n6\n7\n8\n9\n");
     }
-
-    // #[test]
-    // fn it_works2() {
-    //     let reader = Reader::new(StdinReader::default());
-    //     let settings = Settings {
-    //         commands: parse_commands("$s/hello/world/"),
-    //         quiet: false,
-    //     };
-
-    //     run(reader, settings, &mut io::stdout());
-    // }
 }

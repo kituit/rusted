@@ -22,6 +22,12 @@ struct CommandLocationRange {
     end: Box<CommandLocation>,
 }
 
+impl CommandLocationRange {
+    fn new(start: CommandLocation, end: CommandLocation) -> Self {
+        Self { is_active: false, start: Box::new(start), end: Box::new(end) }
+    }
+}
+
 impl CommandLocation {
     fn matches(&mut self, line: &Line) -> bool {
         match self {
@@ -112,11 +118,7 @@ pub fn parse_commands(mut command_args: &str) -> Vec<Command> {
                         CommandLocation::LineNumber(end_location_str.parse().unwrap())
                     };
 
-                    CommandLocation::Range(CommandLocationRange {
-                        is_active: false,
-                        start: Box::new(start_location),
-                        end: Box::new(end_location),
-                    })
+                    CommandLocation::Range(CommandLocationRange::new(start_location, end_location))
                 } else {
                     start_location
                 }
@@ -211,7 +213,40 @@ mod location_tests {
 
     #[test]
     fn test_regex() {
-        todo!()
+        let mut location = CommandLocation::Regex(Regex::new("Hello").unwrap());
+        let mut line = Line {
+            line_number: 0,
+            text: "Hello World".to_string(),
+            is_last_line: false
+        };
+
+        assert!(location.matches(&line));
+        line.text = "World".to_string();
+        assert!(!location.matches(&line));
     }
+
+    #[test]
+    fn test_range_line_numbers() {
+        let start = CommandLocation::LineNumber(3);
+        let end = CommandLocation::LineNumber(6);
+        let range = CommandLocationRange::new(start, end);
+        let mut location = CommandLocation::Range(range);
+
+        let mut line = Line {
+            line_number: 0,
+            text: "Hello World".to_string(),
+            is_last_line: false
+        };
+
+        for i in 1..=10 {
+            line.line_number = i;
+            assert_eq!(location.matches(&line), 3 <= i && i <= 6);
+        }
+    }
+
+    // TODO: Test cases were Ranges are ill-defined'
+    //  - What happens if start and end matches on same line
+    //  - What happens if start is regex, end is line number, start matches after line number already passed
+    //  - Fix issue where parses allows end line number to be before start line number
 
 }
