@@ -83,33 +83,53 @@ impl Transformer for Print {
 
 #[cfg(test)]
 mod tests {
+    use quickcheck::quickcheck;
+
     use super::*;
 
     #[test]
     fn test_delete() {
         let mut text = String::from("Hello world");
         let mut output = Vec::<u8>::new();
-        
+
         assert_eq!(Delete.apply(&mut text, &mut output), Ok(()));
         assert_eq!(String::from_utf8(output).unwrap(), "");
         assert_eq!(text, "");
+    }
+
+    quickcheck! {
+        fn test_delete_prop(text: String) -> bool {
+            let mut output = Vec::<u8>::new();
+            let mut textcopy = text.clone();
+            let _ = Delete.apply(&mut textcopy, &mut output);
+            textcopy == ""
+        }
     }
 
     #[test]
     fn test_print() {
         let mut text = String::from("Hello world");
         let mut output = Vec::<u8>::new();
-        
+
         assert_eq!(Print.apply(&mut text, &mut output), Ok(()));
         assert_eq!(String::from_utf8(output).unwrap(), text);
         assert_eq!(text, "Hello world");
+    }
+
+    quickcheck! {
+        fn test_print_prop(text: String) -> bool {
+            let mut output = Vec::<u8>::new();
+            let mut textcopy = text.clone();
+            let _ = Print.apply(&mut textcopy, &mut output);
+            textcopy == text && String::from_utf8(output).unwrap() == text
+        }
     }
 
     #[test]
     fn test_quit() {
         let mut text = String::from("Hello world");
         let mut output = Vec::<u8>::new();
-        
+
         assert_eq!(Quit.apply(&mut text, &mut output), Err(TransformerException::Quit));
         assert_eq!(String::from_utf8(output).unwrap(), "");
         assert_eq!(text, "Hello world");
